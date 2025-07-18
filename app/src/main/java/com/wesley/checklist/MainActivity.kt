@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons // MANTENHA ESTA LINHA
-import androidx.compose.material.icons.filled.AccessTime // MANTENHA ESTA LINHA
-import androidx.compose.material.icons.filled.Add // MANTENHA ESTA LINHA
-import androidx.compose.material.icons.filled.Remove // MANTENHA ESTA LINHA
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,7 +62,7 @@ fun DailySectorExitForm() {
     var ordem by remember { mutableStateOf("") }
     var horarioChave by remember { mutableStateOf("") }
     var saida by remember { mutableStateOf("") }
-    var motivoAtraso by remember { mutableStateOf("") }
+    var motivoAtraso by remember { mutableStateOf("N/A") }
 
     // Estados para validação
     var telefoneError by remember { mutableStateOf(false) }
@@ -76,13 +76,13 @@ fun DailySectorExitForm() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(40.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Título
         Text(
-            text = "PADRÃO DE SAÍDA DIÁRIA DO SETOR",
+            text = "SAÍDA DIÁRIA DO SETOR",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -106,7 +106,7 @@ fun DailySectorExitForm() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "PESSOAS:",
+                        text = "ELETRICISTAS:",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -173,7 +173,7 @@ fun DailySectorExitForm() {
                                     this[index] = this[index].copy(matricula = it)
                                 }
                             },
-                            placeholder = { Text("Ex: 4011435") },
+                            placeholder = { Text("Ex: 0000000") },
                             label = { Text("Matrícula") },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -204,7 +204,7 @@ fun DailySectorExitForm() {
                     telefoneError = true
                 }
             },
-            placeholder = { Text("Ex: 16") },
+            placeholder = { Text("Ex: 00") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = telefoneError,
@@ -219,14 +219,14 @@ fun DailySectorExitForm() {
 
         // Carro
         Text(
-            text = "Carro:",
+            text = "Placa do carro:",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
         OutlinedTextField(
             value = carro,
             onValueChange = { carro = it.uppercase() },
-            placeholder = { Text("Ex: TUU0H16") },
+            placeholder = { Text("Ex: AAA0A00") },
             modifier = Modifier.fillMaxWidth(),
             supportingText = { Text("Digite a placa do veículo") }
         )
@@ -240,7 +240,7 @@ fun DailySectorExitForm() {
         OutlinedTextField(
             value = ordem,
             onValueChange = { ordem = it },
-            placeholder = { Text("Ex: 4532-9") },
+            placeholder = { Text("Ex: 00000") },
             modifier = Modifier.fillMaxWidth(),
             supportingText = { Text("Digite o número de ordem do veículo") }
         )
@@ -267,7 +267,7 @@ fun DailySectorExitForm() {
 
         // Saída
         Text(
-            text = "Saída:",
+            text = "Saída da base:",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
@@ -294,7 +294,7 @@ fun DailySectorExitForm() {
         OutlinedTextField(
             value = motivoAtraso,
             onValueChange = { motivoAtraso = it },
-            placeholder = { Text("Ex: Esperando Biddle chegar da rua") },
+            placeholder = { Text("Ex: Justificativa se houver atraso") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
             supportingText = { Text("Descreva o motivo do atraso, se houver") }
@@ -460,18 +460,18 @@ fun formatarMensagem(
     val matriculas = pessoas.joinToString(" e ") { it.matricula }
 
     return """
-#BOA NOITE
+BOA NOITE
 
-##PADRÃO DE SAIDA DIARIA DO SETOR
+SAIDA DIÁRIA DO SETOR
 
-**NOME:** $nomes
-**Matrícula:** $matriculas
-**TELEFONE:** $telefone
-**Carro:** $carro
-**ORDEM:** $ordem
-**Horário de retirada da chave no almoxarifado:** $horarioChave
-**Saída:** $saida
-*MOTIVO DE ATRASO:* $motivoAtraso
+NOME: $nomes
+Matrícula: $matriculas
+TELEFONE: $telefone
+Carro: $carro
+ORDEM: $ordem
+Horário de retirada da chave no almoxarifado: $horarioChave
+Saída: $saida
+MOTIVO DE ATRASO: $motivoAtraso
     """.trimIndent()
 }
 
