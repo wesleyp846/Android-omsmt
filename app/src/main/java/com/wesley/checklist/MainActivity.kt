@@ -72,6 +72,9 @@ fun DailySectorExitForm() {
     var showTimePickerSaida by remember { mutableStateOf(false) }
     val timePickerStateChave = rememberTimePickerState()
     val timePickerStateSaida = rememberTimePickerState()
+    // Adicione este estado de erro antes do Column:
+    var carroError by remember { mutableStateOf(false) }
+    var ordemError by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -157,10 +160,10 @@ fun DailySectorExitForm() {
                             value = pessoa.nome,
                             onValueChange = {
                                 pessoas = pessoas.toMutableList().apply {
-                                    this[index] = this[index].copy(nome = it)
+                                    this[index] = this[index].copy(nome = it.uppercase())
                                 }
                             },
-                            placeholder = { Text("Ex: Luiz Guilherme") },
+                            placeholder = { Text("Ex: Seu Nome") },
                             label = { Text("Nome") },
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -169,14 +172,19 @@ fun DailySectorExitForm() {
                         OutlinedTextField(
                             value = pessoa.matricula,
                             onValueChange = {
+                                // Garante apenas digitos
+                                val filtered = it.filter { char -> char.isDigit() }
+                                // Garante apenas 7 digitos
+                                if (filtered.length <= 7)
                                 pessoas = pessoas.toMutableList().apply {
-                                    this[index] = this[index].copy(matricula = it)
+                                    this[index] = this[index].copy(matricula = filtered)
                                 }
                             },
                             placeholder = { Text("Ex: 0000000") },
                             label = { Text("Matrícula") },
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            supportingText = { Text("7 dígitos numéricos") }
                         )
 
                         if (index < pessoas.size - 1) {
@@ -197,10 +205,11 @@ fun DailySectorExitForm() {
             value = telefone,
             onValueChange = {
                 // Limita a 2 dígitos e apenas números
-                if (it.length <= 2 && it.all { char -> char.isDigit() }) {
-                    telefone = it
+                val filtered = it.filter { char -> char.isDigit() }
+                if (filtered.length <= 2) {
+                    telefone = filtered
                     telefoneError = false
-                } else if (it.length > 2) {
+                } else {
                     telefoneError = true
                 }
             },
@@ -225,10 +234,25 @@ fun DailySectorExitForm() {
         )
         OutlinedTextField(
             value = carro,
-            onValueChange = { carro = it.uppercase() },
-            placeholder = { Text("Ex: AAA0A00") },
+            onValueChange = {
+                val filtered = it.filter { char -> char.isLetterOrDigit() }.uppercase()
+                if (validarFormatoCarroTemporario(filtered) && filtered.length <= 7) {
+                    carro = filtered
+                    carroError = false
+                } else if (filtered.length > 7 || !validarFormatoCarroTemporario(filtered)) {
+                    carroError = true
+                }
+            },
+            placeholder = { Text("Ex: TUU0H16") },
             modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text("Digite a placa do veículo") }
+            isError = carroError,
+            supportingText = {
+                if (carroError) {
+                    Text("Formato inválido (AAA#A##)", color = MaterialTheme.colorScheme.error)
+                } else {
+                    Text("Formato: AAA#A## (ex: TUU0H16)")
+                }
+            }
         )
 
         // ORDEM
@@ -239,10 +263,26 @@ fun DailySectorExitForm() {
         )
         OutlinedTextField(
             value = ordem,
-            onValueChange = { ordem = it },
-            placeholder = { Text("Ex: 00000") },
+            onValueChange = {
+                val filtered = it.filter { char -> char.isDigit() }
+                if (filtered.length <= 5) {
+                    ordem = filtered
+                    ordemError = false
+                } else {
+                    ordemError = true
+                }
+            },
+            placeholder = { Text("Ex: 45329") },
             modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text("Digite o número de ordem do veículo") }
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            isError = ordemError,
+            supportingText = {
+                if (ordemError) {
+                    Text("Apenas 5 dígitos numéricos", color = MaterialTheme.colorScheme.error)
+                } else {
+                    Text("Digite 5 dígitos numéricos")
+                }
+            }
         )
 
         // Horário de retirada da chave no almoxarifado
@@ -293,7 +333,7 @@ fun DailySectorExitForm() {
         )
         OutlinedTextField(
             value = motivoAtraso,
-            onValueChange = { motivoAtraso = it },
+            onValueChange = { motivoAtraso = it.uppercase() },
             placeholder = { Text("Ex: Justificativa se houver atraso") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
@@ -416,10 +456,29 @@ fun validarCamposCompletos(
             Toast.makeText(context, "Por favor, preencha o nome da pessoa ${index + 1}", Toast.LENGTH_SHORT).show()
             return false
         }
-        if (pessoa.matricula.trim().isEmpty()) {
-            Toast.makeText(context, "Por favor, preencha a matrícula da pessoa ${index + 1}", Toast.LENGTH_SHORT).show()
+        // Validação de Matrícula (7 dígitos numéricos)
+        if (pessoa.matricula.length != 7 || !pessoa.matricula.all { it.isDigit() }) {
+            Toast.makeText(context, "Matrícula da pessoa ${index + 1} deve conter exatamente 7 dígitos numéricos", Toast.LENGTH_SHORT).show()
             return false
         }
+    }
+    // Validação específica do telefone (2 dígitos numéricos)
+    if (telefone.length != 2 || !telefone.all { it.isDigit() }) {
+        Toast.makeText(context, "TELEFONE deve conter exatamente 2 dígitos numéricos", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+// Validação do Carro (3 letras + 1 número + 1 letra + 2 números)
+    val regexCarro = Regex("^[A-Z]{3}[0-9][A-Z][0-9]{2}$")
+    if (!carro.matches(regexCarro)) {
+        Toast.makeText(context, "Carro deve estar no formato AAA#A## (ex: TUU0H16)", Toast.LENGTH_SHORT).show()
+        return false
+    }
+
+// Validação da Ordem (5 dígitos numéricos)
+    if (ordem.length != 5 || !ordem.all { it.isDigit() }) {
+        Toast.makeText(context, "ORDEM deve conter exatamente 5 dígitos numéricos", Toast.LENGTH_SHORT).show()
+        return false
     }
 
     val campos = listOf(
@@ -522,4 +581,19 @@ fun compartilharTexto(mensagem: String, context: android.content.Context) {
     } catch (e: Exception) {
         Toast.makeText(context, "Erro ao compartilhar: ${e.message}", Toast.LENGTH_LONG).show()
     }
+}
+
+fun validarFormatoCarroTemporario(texto: String): Boolean {
+    // Permite digitação gradual seguindo o padrão AAA#A##
+    val regexes = listOf(
+        "^$",                           // Vazio
+        "^[A-Z]$",                      // 1 letra
+        "^[A-Z]{2}$",                   // 2 letras
+        "^[A-Z]{3}$",                   // 3 letras
+        "^[A-Z]{3}[0-9]$",             // 3 letras + 1 número
+        "^[A-Z]{3}[0-9][A-Z]$",        // 3 letras + 1 número + 1 letra
+        "^[A-Z]{3}[0-9][A-Z][0-9]$",   // 3 letras + 1 número + 1 letra + 1 número
+        "^[A-Z]{3}[0-9][A-Z][0-9]{2}$" // Formato completo
+    )
+    return regexes.any { texto.matches(Regex(it)) }
 }
